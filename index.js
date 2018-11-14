@@ -1,29 +1,47 @@
-// Checks API example
-// See: https://developer.github.com/v3/checks/ to learn more
+const getFixupStatus = require('./lib/fixup.js')
+
 module.exports = app => {
-  app.on(['check_suite.requested', 'check_run.rerequested'], check)
-
+  app.on(['pull_request.opened', 'pull_request.synchronize', 'check_run.requested'], check)
+  
   async function check (context) {
-    // Do stuff
-    const { head_branch, head_sha } = context.payload.check_suite
-    // Probot API note: context.repo() => {username: 'hiimbex', repo: 'testing-things'}
-    return context.github.checks.create(context.repo({
-      name: 'My app!',
-      head_branch,
-      head_sha,
-      status: 'completed',
-      conclusion: 'success',
-      completed_at: new Date(),
-      output: {
-        title: 'Probot check!',
-        summary: 'The check has passed!'
-      }
+
+    const pr = context.payload.pull_request
+
+    const compare = await context.github.repos.compareCommits(context.repo({
+      base: pr.base.sha,
+      head: pr.head.sha
     }))
+
+    const commits = compare.data.commits
+    const fixupFailed = await getFixupStatus(commits, app)
+    
+    if (!fixupFailed.length) {
+      // All is well
+      return context.github.checks.create(context.repo({
+        name: 'fixupbot',
+        head_branch: pr.head.ref,
+        head_sha: pr.head.sha,
+        status: 'completed',
+        conclusion: 'success',
+        completed_at: new Date(),
+        output: {
+          title: 'Fixup',
+          summary: 'No fixup commits found'
+        }
+      }))
+    } else {
+      return context.github.checks.create(context.repo({
+        name: 'fixupbot',
+        head_branch: pr.head.ref,
+        head_sha: pr.head.sha,
+        status: 'completed',
+        conclusion: 'action_required',
+        completed_at: new Date(),
+        output: {
+          title: 'Fixup',
+          summary: 'Fixup commits found. Please rebase with --autosquash'
+        }
+      }))
+    }
   }
-
-  // For more information on building apps:
-  // https://probot.github.io/docs/
-
-  // To get your app running against GitHub, see:
-  // https://probot.github.io/docs/development/
 }
