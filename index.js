@@ -25,7 +25,7 @@ module.exports = app => {
         conclusion: 'success',
         completed_at: new Date(),
         output: {
-          title: 'Fixup',
+          title: 'No fixup commits found. The commit history is clean :+1:',
           summary: 'No fixup commits found'
         }
       }))
@@ -38,8 +38,8 @@ module.exports = app => {
         conclusion: 'action_required',
         completed_at: new Date(),
         output: {
-          title: 'Fixup',
-          summary: 'Fixup commits found. Please rebase with --autosquash'
+          title: 'Fixup commits detected',
+          summary: 'Fixup commits detected. Please rebase with autosquash before the merge.'
         }
       }))
     }
