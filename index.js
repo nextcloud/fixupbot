@@ -25,7 +25,7 @@ module.exports = app => {
         conclusion: 'success',
         completed_at: new Date(),
         output: {
-          title: 'No fixup commits found. The commit history is clean :+1:',
+          title: 'No fixup commits found. The commit history is clean 👍',
           summary: 'No fixup commits found'
         }
       }))
