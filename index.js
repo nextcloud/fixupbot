@@ -4,7 +4,6 @@ module.exports = app => {
   app.on(['pull_request.opened', 'pull_request.synchronize', 'check_run.requested'], check)
   
   async function check (context) {
-
     const pr = context.payload.pull_request
 
     const compare = await context.github.repos.compareCommits(context.repo({
@@ -13,7 +12,7 @@ module.exports = app => {
     }))
 
     const commits = compare.data.commits
-    const fixupFailed = await getFixupStatus(commits, app)
+    const fixupFailed = await getFixupStatus(commits)
     
     if (!fixupFailed.length) {
       // All is well
@@ -30,6 +29,11 @@ module.exports = app => {
         }
       }))
     } else {
+      const summary = 'Fixup commits should not be merged.\n\n' +
+      'When this PR is finished and reviewed please squash your fixup commits with: \n' + 
+      '`git rebase --interactive --autosquash ' + commits[0].sha + '^`\n\n' +
+      'Note that you will have to use the `--force` option for the next push.'
+
       return context.github.checks.create(context.repo({
         name: 'fixupbot',
         head_branch: pr.head.ref,
@@ -39,7 +43,7 @@ module.exports = app => {
         completed_at: new Date(),
         output: {
           title: 'Fixup commits detected',
-          summary: 'Fixup commits detected. Please rebase with autosquash before the merge.'
+          summary: summary
         }
       }))
     }
