@@ -4,6 +4,7 @@ module.exports = app => {
   app.on(['pull_request.opened', 'pull_request.synchronize', 'check_run.requested'], check)
   
   async function check (context) {
+    const startedAt = new Date()
     const pr = context.payload.pull_request
 
     const compare = await context.github.repos.compareCommits(context.repo({
@@ -21,6 +22,7 @@ module.exports = app => {
         head_branch: pr.head.ref,
         head_sha: pr.head.sha,
         status: 'completed',
+        started_at: startedAt,
         conclusion: 'success',
         completed_at: new Date(),
         output: {
