@@ -69,3 +69,6 @@ jobs:
           git status
           git --no-pager diff
           exit 1 # make it red to grab attention
+
+      - name: Test
+        run: npm run test --if-present
